@@ -592,7 +592,7 @@ jobs:
         env:
            GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-          gh workflow run build.yaml --repo https://github.com/galasa-dev/simplatform --ref ${{ env.BRANCH }}
+          gh workflow run build.yaml --repo https://github.com/jackyhodev/simplatform --ref ${{ env.BRANCH }}
 
   report-failure:
     name: Report failure in workflow
