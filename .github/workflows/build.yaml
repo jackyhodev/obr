@@ -12,7 +12,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  NAMESPACE: galasa-dev
+  NAMESPACE: jackyhodev
   BRANCH: ${{ github.ref_name }}
   ARGOCD_AUTH_TOKEN: ${{ secrets.ARGOCD_TOKEN }}
 
@@ -88,7 +88,7 @@ jobs:
         env:
             GPG_KEY_BASE64: ${{ secrets.GPG_KEY }}
         run : |
-            echo $GPG_KEY_BASE64 |  base64 --decode > /home/runner/work/secrets/galasa.gpg
+            sudo echo "${GPG_KEY_BASE64// /}" | base64 --decode > /home/runner/work/secrets/galasa.gpg
             
       - name: Make GPG home directory and change permissions
         run: |
@@ -141,6 +141,7 @@ jobs:
         run: |
           set -o pipefail
           mvn -f obr/dev.galasa.uber.obr/pom.xml deploy -X \
+          -Dgpg.skip=true \
           -Dgalasa.source.repo=https://development.galasa.dev/${{ env.BRANCH }}/maven-repo/managers \
           -Dgalasa.central.repo=https://repo.maven.apache.org/maven2/ \
           -Dgalasa.release.repo=file:${{ github.workspace }}/obr/repo \
@@ -159,8 +160,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: galasa-team
-          password: ${{ secrets.GALASA_TEAM_WRITE_PACKAGES_TOKEN }}
+          username: jackyhodev
+          password: ${{ secrets.GH_TOKEN }}
     
       - name: Extract metadata for OBR image
         id: metadata-obr
@@ -181,13 +182,13 @@ jobs:
             dockerRepository=${{ env.REGISTRY }}
             tag=${{ env.BRANCH }}
       
-      - name: Recycle OBR application in ArgoCD
-        run: |
-          docker run --env ARGOCD_AUTH_TOKEN=${{ env.ARGOCD_AUTH_TOKEN }} --rm -v ${{ github.workspace }}:/var/workspace ghcr.io/galasa-dev/argocdcli:main app actions run ${{ env.BRANCH }}-maven-repos restart --kind Deployment --resource-name obr-${{ env.BRANCH }} --server argocd.galasa.dev
+      #- name: Recycle OBR application in ArgoCD
+        #run: |
+          #docker run --env ARGOCD_AUTH_TOKEN=${{ env.ARGOCD_AUTH_TOKEN }} --rm -v ${{ github.workspace }}:/var/workspace ghcr.io/galasa-dev/argocdcli:main app actions run ${{ env.BRANCH }}-maven-repos restart --kind Deployment --resource-name obr-${{ env.BRANCH }} --server argocd.galasa.dev
 
-      - name: Wait for OBR application health in ArgoCD
-        run: |
-          docker run --env ARGOCD_AUTH_TOKEN=${{ env.ARGOCD_AUTH_TOKEN }} --rm -v ${{ github.workspace }}:/var/workspace ghcr.io/galasa-dev/argocdcli:main app wait ${{ env.BRANCH }}-maven-repos --resource apps:Deployment:obr-${{ env.BRANCH }} --health --server argocd.galasa.dev
+      #- name: Wait for OBR application health in ArgoCD
+        #run: |
+          #docker run --env ARGOCD_AUTH_TOKEN=${{ env.ARGOCD_AUTH_TOKEN }} --rm -v ${{ github.workspace }}:/var/workspace ghcr.io/galasa-dev/argocdcli:main app wait ${{ env.BRANCH }}-maven-repos --resource apps:Deployment:obr-${{ env.BRANCH }} --health --server argocd.galasa.dev
 
       # To build an image with the Uber OBR and galasabld executable inside.
       # This is needed during releases.
@@ -286,7 +287,7 @@ jobs:
         env:
           GPG_KEY_BASE64: ${{ secrets.GPG_KEY }}
         run : |
-          echo $GPG_KEY_BASE64 |  base64 --decode > /home/runner/work/secrets/galasa.gpg
+          sudo echo "${GPG_KEY_BASE64// /}" | base64 --decode > /home/runner/work/secrets/galasa.gpg
           
       - name: Make GPG home directory and change permissions
         run: |
@@ -313,6 +314,7 @@ jobs:
         run: |
           set -o pipefail
           mvn -f obr/javadocs/pom.xml deploy -X \
+          -Dgpg.skip=true \
           -Dgalasa.source.repo=https://development.galasa.dev/${{ env.BRANCH }}/maven-repo/managers \
           -Dgalasa.central.repo=https://repo.maven.apache.org/maven2/ \
           -Dgalasa.release.repo=file:${{ github.workspace }}/obr/javadocs/docker/repo \
@@ -332,8 +334,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: galasa-team
-          password: ${{ secrets.GALASA_TEAM_WRITE_PACKAGES_TOKEN }}
+          username: jackyhodev
+          password: ${{ secrets.GH_TOKEN }}
     
       - name: Extract metadata for Javadoc site image
         id: metadata-javadoc-site
@@ -351,13 +353,13 @@ jobs:
           tags: ${{ steps.metadata-javadoc-site.outputs.tags }}
           labels: ${{ steps.metadata-javadoc-site.outputs.labels }}
       
-      - name: Recycle javadocsite application in ArgoCD
-        run: |
-          docker run --env ARGOCD_AUTH_TOKEN=${{ env.ARGOCD_AUTH_TOKEN }} --rm -v ${{ github.workspace }}:/var/workspace ghcr.io/galasa-dev/argocdcli:main app actions run ${{ env.BRANCH }}-maven-repos restart --kind Deployment --resource-name javadocsite-${{ env.BRANCH }} --server argocd.galasa.dev
+      #- name: Recycle javadocsite application in ArgoCD
+        #run: |
+          #docker run --env ARGOCD_AUTH_TOKEN=${{ env.ARGOCD_AUTH_TOKEN }} --rm -v ${{ github.workspace }}:/var/workspace ghcr.io/galasa-dev/argocdcli:main app actions run ${{ env.BRANCH }}-maven-repos restart --kind Deployment --resource-name javadocsite-${{ env.BRANCH }} --server argocd.galasa.dev
       
-      - name: Wait for javadocsite application health in ArgoCD
-        run: |
-          docker run --env ARGOCD_AUTH_TOKEN=${{ env.ARGOCD_AUTH_TOKEN }} --rm -v ${{ github.workspace }}:/var/workspace ghcr.io/galasa-dev/argocdcli:main app wait ${{ env.BRANCH }}-maven-repos --resource apps:Deployment:javadocsite-${{ env.BRANCH }} --health --server argocd.galasa.dev
+      #- name: Wait for javadocsite application health in ArgoCD
+        #run: |
+          #docker run --env ARGOCD_AUTH_TOKEN=${{ env.ARGOCD_AUTH_TOKEN }} --rm -v ${{ github.workspace }}:/var/workspace ghcr.io/galasa-dev/argocdcli:main app wait ${{ env.BRANCH }}-maven-repos --resource apps:Deployment:javadocsite-${{ env.BRANCH }} --health --server argocd.galasa.dev
       
       - name: Extract metadata for Javadoc Maven repo image
         id: metadata
@@ -378,13 +380,13 @@ jobs:
             dockerRepository=${{ env.REGISTRY }}
             baseVersion=latest
           
-      - name: Recycle javadoc application in ArgoCD
-        run: |
-          docker run --env ARGOCD_AUTH_TOKEN=${{ env.ARGOCD_AUTH_TOKEN }} --rm -v ${{ github.workspace }}:/var/workspace ghcr.io/galasa-dev/argocdcli:main app actions run ${{ env.BRANCH }}-maven-repos restart --kind Deployment --resource-name javadoc-${{ env.BRANCH }} --server argocd.galasa.dev
+      #- name: Recycle javadoc application in ArgoCD
+        #run: |
+          #docker run --env ARGOCD_AUTH_TOKEN=${{ env.ARGOCD_AUTH_TOKEN }} --rm -v ${{ github.workspace }}:/var/workspace ghcr.io/galasa-dev/argocdcli:main app actions run ${{ env.BRANCH }}-maven-repos restart --kind Deployment --resource-name javadoc-${{ env.BRANCH }} --server argocd.galasa.dev
 
-      - name: Wait for javadoc application health in ArgoCD
-        run: |
-          docker run --env ARGOCD_AUTH_TOKEN=${{ env.ARGOCD_AUTH_TOKEN }} --rm -v ${{ github.workspace }}:/var/workspace ghcr.io/galasa-dev/argocdcli:main app wait ${{ env.BRANCH }}-maven-repos --resource apps:Deployment:javadoc-${{ env.BRANCH }} --health --server argocd.galasa.dev
+      #- name: Wait for javadoc application health in ArgoCD
+       #run: |
+          #docker run --env ARGOCD_AUTH_TOKEN=${{ env.ARGOCD_AUTH_TOKEN }} --rm -v ${{ github.workspace }}:/var/workspace ghcr.io/galasa-dev/argocdcli:main app wait ${{ env.BRANCH }}-maven-repos --resource apps:Deployment:javadoc-${{ env.BRANCH }} --health --server argocd.galasa.dev
 
   build-obr-generic:
     name: Build OBR embedded and boot images using galasabld and maven
@@ -445,7 +447,7 @@ jobs:
         env:
             GPG_KEY_BASE64: ${{ secrets.GPG_KEY }}
         run : |
-            echo $GPG_KEY_BASE64 |  base64 --decode > /home/runner/work/secrets/galasa.gpg
+          sudo echo "${GPG_KEY_BASE64// /}" | base64 --decode > /home/runner/work/secrets/galasa.gpg
             
       - name: Make GPG home directory and change permissions
         run: |
@@ -473,6 +475,7 @@ jobs:
         run: |
           set -o pipefail
           mvn -f pom.xml process-sources -X \
+          -Dgpg.skip=true \
           -Dgalasa.source.repo=https://development.galasa.dev/${{ env.BRANCH }}/maven-repo/obr \
           -Dgalasa.central.repo=https://repo.maven.apache.org/maven2/ \
           dev.galasa:galasa-maven-plugin:0.15.0:obrembedded \
@@ -491,8 +494,8 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: galasa-team
-          password: ${{ secrets.GALASA_TEAM_WRITE_PACKAGES_TOKEN }}
+          username: jackyhodev
+          password: ${{ secrets.GH_TOKEN }}
     
       - name: Extract metadata for OBR generic image
         id: metadata-obr-generic
@@ -566,27 +569,27 @@ jobs:
       - name: Triggering helm build (github.ref is main)
         if: ${{ env.BRANCH == 'main' }}
         env:
-          GH_TOKEN: ${{ secrets.GALASA_TEAM_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-         gh workflow run build-helm.yaml --repo https://github.com/galasa-dev/automation --ref ${{ env.BRANCH }}
+         gh workflow run build-helm.yaml --repo https://github.com/jackyhodev/automation --ref ${{ env.BRANCH }}
 
       - name: Triggering integratedtests build (github.ref is main)
         if: ${{ env.BRANCH == 'main' }}
         env:
-          GH_TOKEN: ${{ secrets.GALASA_TEAM_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-         gh workflow run build.yaml --repo https://github.com/galasa-dev/integratedtests --ref ${{ env.BRANCH }}
+         gh workflow run build.yaml --repo https://github.com/jackyhodev/integratedtests --ref ${{ env.BRANCH }}
         
       - name: Triggering cli build (github.ref is not main) 
         if: ${{ env.BRANCH != 'main' }}
         env:
-           GH_TOKEN: ${{ secrets.GALASA_TEAM_GITHUB_TOKEN }}
+           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           gh workflow run build.yml --repo https://github.com/galasa-dev/cli --ref ${{ env.BRANCH }}
 
       - name: Triggering simplatform build
         env:
-           GH_TOKEN: ${{ secrets.GALASA_TEAM_GITHUB_TOKEN }}
+           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           gh workflow run build.yaml --repo https://github.com/galasa-dev/simplatform --ref ${{ env.BRANCH }}
 
